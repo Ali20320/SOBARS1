@@ -1,0 +1,44 @@
+name: Build SOBARS APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Extract SOBARS project
+        run: |
+          mkdir appsrc
+          unzip -q SOBARS_flutter_starter.zip -d appsrc
+
+      - name: Generate Android project files
+        working-directory: appsrc
+        run: flutter create . --platforms=android
+
+      - name: Get packages and build APK
+        working-directory: appsrc
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SOBARS-Android-APK
+          path: appsrc/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
